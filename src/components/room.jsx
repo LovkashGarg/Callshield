@@ -18,22 +18,26 @@ export function getUrlParams(url = window.location.href) {
   const urlStr = url.split('?')[1];
   return new URLSearchParams(urlStr);
 }
-const startrecord = async () => {
-    // Call ZegoCloud's recording API
-    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
-    const endTime = currentTime + 30; // Add 30 seconds
 
-    try {
-      const response = await fetch(`https://rtc-api.zego.im/?Action=StartCDNRecord&StreamId[]=cdn01&StreamId[]=cdn02&Vendor=Tencent&EndTime=${endTime}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log("Recording started:", data);
-    } catch (error) {
-      console.error("Error starting recording:", error);
-    }
-  };
+
+// const startrecord = async () => {
+//     // Call ZegoCloud's recording API
+//     const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+//     const endTime = currentTime + 30; // Add 30 seconds
+
+//     try {
+//       const response = await fetch(`https://rtc-api.zego.im/?Action=StartCDNRecord&StreamId[]=cdn01&StreamId[]=cdn02&Vendor=Tencent&EndTime=${endTime}`);
+//       if (!response.ok) {
+//         throw new Error(`HTTP error! status: ${response.status}`);
+//       }
+//       const data = await response.json();
+//       console.log("Recording started:", data);
+//     } catch (error) {
+//       console.error("Error starting recording:", error);
+//     }
+//   };
+
+
 export default function App() {
   const roomID = getUrlParams().get('roomID') || randomID(5);
 
@@ -75,7 +79,7 @@ export default function App() {
         ref={myMeeting}
         style={{ width: '100vw', height: '100vh' }}
       ></div>
-      <button onClick={startrecord} className=''>Start Recording</button>
+      {/* <button onClick={startrecord} className=''>Start Recording</button> */}
     </>
   );
 }
