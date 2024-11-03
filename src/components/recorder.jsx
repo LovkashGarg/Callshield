@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSpeechRecognition } from 'react-speech-kit';
 import axios from 'axios';
+import classNames from 'classnames';
 
 const AudioRecorderWithSpeechRecognition = () => {
   const [value, setValue] = useState('');
@@ -11,8 +12,6 @@ const AudioRecorderWithSpeechRecognition = () => {
   const [audioChunks, setAudioChunks] = useState([]);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [audioUrl, setAudioUrl] = useState('');
-  const [translatedtext, setTranslatedText] = useState([]);
-  const [previousValue, setPreviousValue] = useState(''); // Track the last translated value
 
   const { listen, stop } = useSpeechRecognition({
     onResult: (result) => {
@@ -51,98 +50,72 @@ const AudioRecorderWithSpeechRecognition = () => {
     }
   }, [isListening]);
 
-  useEffect(() => {
-    const translatesentence = async () => {
-      // Check if the value has changed
-      if (value && value !== previousValue) {
-        const url = 'https://deep-translate1.p.rapidapi.com/language/translate/v2';
-        const options = {
-          method: 'POST',
-          headers: {
-            'x-rapidapi-key': '',
-            'x-rapidapi-host': 'deep-translate1.p.rapidapi.com',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            q: value,
-            source: 'hi',
-            target: 'en'
-          })
-        };
-
-        try {
-          const response = await fetch(url, options);
-          const result = await response.json();
-          const translatedText = result.data.translations.translatedText;
-          console.log(translatedText);
-
-          // Set translated text if it's not already included
-          setTranslatedText((prev) => {
-            if (!prev.includes(translatedText)) {
-              return [...prev, translatedText];
-            }
-            return prev; // Prevent duplicate
-          });
-
-          console.log("Sending translated text to server:", translatedText);
-          
-          if (translatedtext.length > 10) {
-            try {
-              let sendToServer = await axios.post('http://localhost:5000/predict', {
-                text: translatedtext.join(),
-                id: roomID
-              });
-              const fraudProbability = sendToServer.data.fraud_probability;
-              setScore(fraudProbability); // Set the fraud probability score
-              console.log("Prediction response:", fraudProbability);
-              setTranslatedText([]); // Clear translated text after sending
-            } catch (axiosError) {
-              console.error("Error posting to server:", axiosError.message);
-              if (axiosError.code === 'ERR_NETWORK') {
-                alert("Network error: Could not reach the server. Please check if the backend is running.");
-              } else {
-                alert(`An error occurred: ${axiosError.message}`);
-              }
-            }
-          }
-        } catch (error) {
-          console.error(error);
-        }
-        
-        setPreviousValue(value); // Update previous value after processing
+  async function predictTheScore(){
+    try {
+      let sendToServer = await axios.post(API_URL+'/predict', {
+        text: value,
+        id: roomID
+      });
+      const fraudProbability = sendToServer.data.fraud_probability;
+      setScore(fraudProbability); // Set the fraud probability score
+    } catch (axiosError) {
+      console.error("Error posting to server:", axiosError.message);
+      if (axiosError.code === 'ERR_NETWORK') {
+        console.log("Network error: Could not reach the server. Please check if the backend is running.");
+      } else {
+        console.log(`An error occurred: ${axiosError.message}`);
       }
-    };
+    }
+  }
 
-    translatesentence();
-  }, [value, previousValue, translatedtext.length, roomID]); // Added previousValue to dependency array
+  useEffect(() => {
+    if (value) {
+      predictTheScore();
+    }
+  }, [value]);
 
   const toggleListening = () => {
     if (isListening) {
       stop(); // Stop speech recognition
+      setIsListening(false);
     } else {
       listen(); // Start speech recognition
+      setIsListening(true);
     }
   };
-    
+
   return (
-    <div>
+    <div className="flex flex-col items-center p-4 min-h-screen bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-100 transition-colors">
       <textarea
         value={value}
-        onChange={(event) => {setValue(event.target.value)}}
+        onChange={(event) => setValue(event.target.value)}
         placeholder="Start speaking..."
-        className="w-full h-40 mb-4 mx-[50px]"
+        style={{ height: "calc(100vh - 300px)" }}
+        className="w-full h-32 mt-8 mb-4 p-3 resize-none rounded-md shadow-lg bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 transition-colors"
       />
-      <div className='w-[300px] h-[40px] bg-red-500 text-white'>{score}</div>
-      <textarea className='w-[400px] h-[200px]' value={translatedtext.join(', ')} readOnly placeholder='Translated text will appear here '/>
-      <button onClick={toggleListening}>
-        {isListening ? 'Stop Listening' : 'Start Listening'}
-      </button>
-      {audioUrl && (
-        <div>
-          <h3>Recorded Audio:</h3>
-          <audio src={audioUrl} controls />
+      <div className="fixed bottom-0 p-3">
+        <div 
+          className={classNames(
+            "rounded-md text-center font-semibold transition-all duration-300 ease-in-out shadow-lg mb-3 py-4 px-2",
+            {
+              "bg-green-400 dark:bg-green-500": score < 40,
+              "bg-yellow-400 dark:bg-yellow-500": score >= 40 && score < 70,
+              "bg-red-400 dark:bg-red-500": score >= 70,
+            }
+          )}
+          style={{ fontSize: '1.2em' }}
+        >
+          Fraud Probability: {score}%
         </div>
-      )}
+        <div className="flex items-center justify-between w-full">
+          <button
+            onClick={toggleListening}
+            className="flex-1 py-2 px-4 rounded-md text-white bg-indigo-500 dark:bg-indigo-700 hover:bg-indigo-600 dark:hover:bg-indigo-800 transition-colors"
+          >
+            {isListening ? 'Stop' : 'Start'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

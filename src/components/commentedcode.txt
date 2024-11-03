@@ -1,0 +1,81 @@
+
+const [audioUrl, setAudioUrl] = useState('');
+  const [translatedtext, setTranslatedText] = useState([]);
+  const [previousValue, setPreviousValue] = useState(''); // Track the last translated value
+
+
+// useEffect(() => {
+  //   const translatesentence = async () => {
+  //     // Check if the value has changed
+  //       if (value && value !== previousValue) {
+  //       const url = 'https://deep-translate1.p.rapidapi.com/language/translate/v2';
+  //       const options = {
+  //         method: 'POST',
+  //         headers: {
+  //           'x-rapidapi-key': '8a82691f35msh695953b9bfc6893p1e8931jsn1a7b290a64f5',
+  //           'x-rapidapi-host': 'deep-translate1.p.rapidapi.com',
+  //           'Content-Type': 'application/json'
+  //         },
+  //         body: JSON.stringify({
+  //           q: value,
+  //           source: 'hi',
+  //           target: 'en'
+  //         })
+  //       };
+
+  //       try {
+  //         const response = await fetch(url, options);
+  //         const result = await response.json();
+  //         const translatedText = result.data.translations.translatedText;
+  //         console.log(translatedText);
+
+  //         // Set translated text if it's not already included
+  //         setTranslatedText((prev) => {
+  //           if (!prev.includes(translatedText)) {
+  //             return [...prev, translatedText];
+  //           }
+  //           return prev; // Prevent duplicate
+  //         });
+  //         count++;
+  //         console.log("count = ",count);
+
+  //         console.log("Sending translated text to server:", translatedText);
+          
+  //         if (translatedtext.length > 10) {
+  //           try {
+  //             let sendToServer = await axios.post('http://localhost:5000/predict', {
+  //               text: value,
+  //               id: roomID
+  //             });
+  //             const fraudProbability = sendToServer.data.fraud_probability;
+  //             setScore(fraudProbability); // Set the fraud probability score
+  //             console.log("Prediction response:", fraudProbability);
+  //             setTranslatedText([]); // Clear translated text after sending
+  //           } catch (axiosError) {
+  //             console.error("Error posting to server:", axiosError.message);
+  //             if (axiosError.code === 'ERR_NETWORK') {
+  //               alert("Network error: Could not reach the server. Please check if the backend is running.");
+  //             } else {
+  //               alert(`An error occurred: ${axiosError.message}`);
+  //             }
+  //           }
+  //         }
+  //       } catch (error) {
+  //         console.error(error);
+  //       }
+        
+  //       setPreviousValue(value); // Update previous value after processing
+  //     }
+  //   };
+
+  //   // translatesentence();
+  // }, [value, previousValue, translatedtext.length, roomID]); // Added previousValue to dependency array
+
+
+
+  {/* {audioUrl && (
+        <div>
+          <h3>Recorded Audio:</h3>
+          <audio src={audioUrl} controls />
+        </div>
+      )} */}
