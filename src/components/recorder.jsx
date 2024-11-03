@@ -1,51 +1,78 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSpeechRecognition } from 'react-speech-kit';
 
-const Example = () => {
+const AudioRecorderWithSpeechRecognition = () => {
   const [value, setValue] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [audioChunks, setAudioChunks] = useState([]);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [audioUrl, setAudioUrl] = useState('');
 
   const { listen, stop } = useSpeechRecognition({
     onResult: (result) => {
-      console.log("Result received:", result);
-      setValue(result);  // Update value with the result from recognition
+      setValue(result); // Update with recognized text
     },
     onStart: () => {
-      console.log("Speech recognition started");
-      setIsListening(true); // Set listening state to true
+      setIsListening(true);
     },
     onEnd: () => {
-      console.log("Speech recognition stopped");
-      setIsListening(false); // Set listening state to false
-    }
+      setIsListening(false);
+    },
   });
 
-  const toggleListening = () => {
-    console.log("Toggle listening called, isListening:", isListening);
+  useEffect(() => {
     if (isListening) {
-      stop();
+      // Start capturing audio
+      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+        const recorder = new MediaRecorder(stream);
+        setMediaRecorder(recorder);
+
+        recorder.ondataavailable = (event) => {
+          setAudioChunks((prev) => [...prev, event.data]);
+        };
+
+        recorder.onstop = () => {
+          const blob = new Blob(audioChunks, { type: 'audio/wav' });
+          setAudioUrl(URL.createObjectURL(blob));
+          setAudioChunks([]); // Clear audio chunks after stopping
+        };
+
+        recorder.start();
+      }).catch((err) => {
+        console.error("Error accessing microphone:", err);
+      });
+    } else if (mediaRecorder) {
+      mediaRecorder.stop(); // Stop recording when not listening
+    }
+  }, [isListening]);
+
+  const toggleListening = () => {
+    if (isListening) {
+      stop(); // Stop speech recognition
     } else {
-      listen();
+      listen(); // Start speech recognition
     }
   };
-
-  // Use effect to track isListening changes for debugging
-  useEffect(() => {
-    console.log("isListening state changed to:", isListening);
-  }, [isListening]);
 
   return (
     <div>
       <textarea
-        className="w-[100%] h-[200px] mb-[20px]"
         value={value}
         onChange={(event) => setValue(event.target.value)}
+        placeholder="Start speaking..."
+        className="w-full h-40 mb-4 mx-[50px]"
       />
       <button onClick={toggleListening}>
-        🎤 {isListening ? <>"Listening..." </>: <>"Press to Talk"</>}
+        {isListening ? 'Stop Listening' : 'Start Listening'}
       </button>
+      {audioUrl && (
+        <div>
+          <h3>Recorded Audio:</h3>
+          <audio src={audioUrl} controls />
+        </div>
+      )}
     </div>
   );
 };
 
-export default Example;
+export default AudioRecorderWithSpeechRecognition;

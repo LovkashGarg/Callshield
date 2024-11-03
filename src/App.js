@@ -1,6 +1,6 @@
 import './App.css';
 // import CallAppHome from './components/home';
-import Example from './components/recorder';
+import AudioRecorderWithSpeechRecognition from './components/recorder';
 import Room from './components/room';
 
 function App() {
@@ -8,7 +8,7 @@ function App() {
     <div className="App">
      {/* <CallAppHome/> */}
      <Room/>
-     <Example/>
+     <AudioRecorderWithSpeechRecognition/>
     </div>
   );
 }
