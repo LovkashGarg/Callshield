@@ -7,7 +7,7 @@ const AudioRecorderWithSpeechRecognition = () => {
   const [audioChunks, setAudioChunks] = useState([]);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [audioUrl, setAudioUrl] = useState('');
-
+  const [translatedtext,settranslatedtext]=useState('');
   const { listen, stop } = useSpeechRecognition({
     onResult: (result) => {
       setValue(result); // Update with recognized text
@@ -46,6 +46,43 @@ const AudioRecorderWithSpeechRecognition = () => {
     }
   }, [isListening]);
 
+  useEffect(()=>{
+    const translatesentence = async () => {
+      const url = 'https://deep-translate1.p.rapidapi.com/language/translate/v2';
+    
+      const options = {
+          method: 'POST',
+          headers: {
+              'x-rapidapi-key': '479b775b31mshe80751744e53a0ep19b1a8jsn9c3e879a0dbe',
+              'x-rapidapi-host': 'deep-translate1.p.rapidapi.com',
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+              q: value,
+              source: 'hi',
+              target: 'en'
+          })
+      };
+    
+      try {
+          const response = await fetch(url, options);
+          let result = await response.text();
+          // Check if the expected data structure exists
+        // if (result?.data?.translations?.translatedText) {
+        result=JSON.parse(result);
+          console.log(result.data.translations.translatedText);
+          settranslatedtext(result.data.translations.translatedText);
+      // } else {
+      //     console.log("Unexpected response structure:", result);
+      // }
+          
+      } catch (error) {
+          console.error(error);
+      }
+    };
+    translatesentence();
+  },[value])
+
   const toggleListening = () => {
     if (isListening) {
       stop(); // Stop speech recognition
@@ -53,15 +90,16 @@ const AudioRecorderWithSpeechRecognition = () => {
       listen(); // Start speech recognition
     }
   };
-
+    
   return (
     <div>
       <textarea
         value={value}
-        onChange={(event) => setValue(event.target.value)}
+        onChange={(event) => {setValue(event.target.value)}}
         placeholder="Start speaking..."
         className="w-full h-40 mb-4 mx-[50px]"
       />
+      <textarea  value={translatedtext} onChange={(event) => setValue(event.target.value)} placeholder='Translated text will appear here '/>
       <button onClick={toggleListening}>
         {isListening ? 'Stop Listening' : 'Start Listening'}
       </button>
