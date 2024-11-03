@@ -47,8 +47,8 @@ export default function App() {
     const serverSecret = process.env.REACT_APP_ZEGOCLOUD_SERVER_SECRET;
     const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, roomID, randomID(5), randomID(5));
 
-    console.log("App ID:", process.env.REACT_APP_ZEGOCLOUD_APP_ID);
-    console.log("Server Secret:", process.env.REACT_APP_ZEGOCLOUD_SERVER_SECRET);
+    // console.log("App ID:", process.env.REACT_APP_ZEGOCLOUD_APP_ID);
+    // console.log("Server Secret:", process.env.REACT_APP_ZEGOCLOUD_SERVER_SECRET);
 
    
 
@@ -79,7 +79,7 @@ export default function App() {
         ref={myMeeting}
         style={{ width: '100vw', height: '100vh' }}
       ></div>
-      
+
       {/* <button onClick={startrecord} className=''>Start Recording</button> */}
     </>
   );
