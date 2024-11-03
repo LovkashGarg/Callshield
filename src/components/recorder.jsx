@@ -59,7 +59,7 @@ const AudioRecorderWithSpeechRecognition = () => {
         const options = {
           method: 'POST',
           headers: {
-            'x-rapidapi-key': '479b775b31mshe80751744e53a0ep19b1a8jsn9c3e879a0dbe',
+            'x-rapidapi-key': '',
             'x-rapidapi-host': 'deep-translate1.p.rapidapi.com',
             'Content-Type': 'application/json'
           },
