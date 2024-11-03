@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
 import joblib
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
 base_dir = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(base_dir, 'model', 'model.pkl')
 vectorizer_path = os.path.join(base_dir, 'model', 'vectorizer.pkl')
@@ -24,6 +25,7 @@ def predict():
     
     if id not in store:
         store[id] = [input_text]
+        
     else:
         store[id].append(input_text)
 

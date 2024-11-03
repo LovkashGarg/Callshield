@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useSpeechRecognition } from 'react-speech-kit';
+import axios from 'axios';
 
 const AudioRecorderWithSpeechRecognition = () => {
   const [value, setValue] = useState('');
+  const queryParams = new URLSearchParams(window.location.search);
+  const roomID = queryParams.get('roomID');
   const [isListening, setIsListening] = useState(false);
+  const [score, setScore] = useState(0);
   const [audioChunks, setAudioChunks] = useState([]);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [audioUrl, setAudioUrl] = useState('');
-  const [translatedtext,settranslatedtext]=useState('');
+  const [translatedtext, setTranslatedText] = useState([]);
+  const [previousValue, setPreviousValue] = useState(''); // Track the last translated value
+
   const { listen, stop } = useSpeechRecognition({
     onResult: (result) => {
       setValue(result); // Update with recognized text
@@ -22,7 +28,6 @@ const AudioRecorderWithSpeechRecognition = () => {
 
   useEffect(() => {
     if (isListening) {
-      // Start capturing audio
       navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
         const recorder = new MediaRecorder(stream);
         setMediaRecorder(recorder);
@@ -46,42 +51,70 @@ const AudioRecorderWithSpeechRecognition = () => {
     }
   }, [isListening]);
 
-  useEffect(()=>{
+  useEffect(() => {
     const translatesentence = async () => {
-      const url = 'https://deep-translate1.p.rapidapi.com/language/translate/v2';
-    
-      const options = {
+      // Check if the value has changed
+      if (value && value !== previousValue) {
+        const url = 'https://deep-translate1.p.rapidapi.com/language/translate/v2';
+        const options = {
           method: 'POST',
           headers: {
-              'x-rapidapi-key': '479b775b31mshe80751744e53a0ep19b1a8jsn9c3e879a0dbe',
-              'x-rapidapi-host': 'deep-translate1.p.rapidapi.com',
-              'Content-Type': 'application/json'
+            'x-rapidapi-key': '479b775b31mshe80751744e53a0ep19b1a8jsn9c3e879a0dbe',
+            'x-rapidapi-host': 'deep-translate1.p.rapidapi.com',
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-              q: value,
-              source: 'hi',
-              target: 'en'
+            q: value,
+            source: 'hi',
+            target: 'en'
           })
-      };
-    
-      try {
+        };
+
+        try {
           const response = await fetch(url, options);
-          let result = await response.text();
-          // Check if the expected data structure exists
-        // if (result?.data?.translations?.translatedText) {
-        result=JSON.parse(result);
-          console.log(result.data.translations.translatedText);
-          settranslatedtext(result.data.translations.translatedText);
-      // } else {
-      //     console.log("Unexpected response structure:", result);
-      // }
+          const result = await response.json();
+          const translatedText = result.data.translations.translatedText;
+          console.log(translatedText);
+
+          // Set translated text if it's not already included
+          setTranslatedText((prev) => {
+            if (!prev.includes(translatedText)) {
+              return [...prev, translatedText];
+            }
+            return prev; // Prevent duplicate
+          });
+
+          console.log("Sending translated text to server:", translatedText);
           
-      } catch (error) {
+          if (translatedtext.length > 10) {
+            try {
+              let sendToServer = await axios.post('http://localhost:5000/predict', {
+                text: translatedtext.join(),
+                id: roomID
+              });
+              const fraudProbability = sendToServer.data.fraud_probability;
+              setScore(fraudProbability); // Set the fraud probability score
+              console.log("Prediction response:", fraudProbability);
+              setTranslatedText([]); // Clear translated text after sending
+            } catch (axiosError) {
+              console.error("Error posting to server:", axiosError.message);
+              if (axiosError.code === 'ERR_NETWORK') {
+                alert("Network error: Could not reach the server. Please check if the backend is running.");
+              } else {
+                alert(`An error occurred: ${axiosError.message}`);
+              }
+            }
+          }
+        } catch (error) {
           console.error(error);
+        }
+        
+        setPreviousValue(value); // Update previous value after processing
       }
     };
+
     translatesentence();
-  },[value])
+  }, [value, previousValue, translatedtext.length, roomID]); // Added previousValue to dependency array
 
   const toggleListening = () => {
     if (isListening) {
@@ -99,7 +132,8 @@ const AudioRecorderWithSpeechRecognition = () => {
         placeholder="Start speaking..."
         className="w-full h-40 mb-4 mx-[50px]"
       />
-      <textarea  value={translatedtext} onChange={(event) => setValue(event.target.value)} placeholder='Translated text will appear here '/>
+      <div className='w-[300px] h-[40px] bg-red-500 text-white'>{score}</div>
+      <textarea className='w-[400px] h-[200px]' value={translatedtext.join(', ')} readOnly placeholder='Translated text will appear here '/>
       <button onClick={toggleListening}>
         {isListening ? 'Stop Listening' : 'Start Listening'}
       </button>
