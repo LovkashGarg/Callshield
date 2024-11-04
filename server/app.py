@@ -5,7 +5,9 @@ import joblib
 import os
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+cors_origin = os.getenv("CORS_ALLOWED_ORIGIN", "*") 
+socketio = SocketIO(app, cors_allowed_origins=cors_origin)
+
 
 CORS(app)
 
@@ -20,6 +22,10 @@ vectorizer = joblib.load(vectorizer_path)
 
 # Store previous messages for each ID
 store = {}
+
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({"message": "Welcome to the Fraud Detection API!"})
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -62,6 +68,9 @@ def handle_predict_event(data):
         emit('error', {"error": "No input text provided"})
         return
     
+    if id in store and store[id][-1].lower() in input_text.lower():
+        print("deleted: ",store[id].pop())
+    
     # Append or create the stored text history for this ID
     if id not in store:
         store[id] = [input_text]
@@ -69,11 +78,11 @@ def handle_predict_event(data):
         store[id].append(input_text)
 
     # Combine text messages for prediction
-    text = ' '.join(store[id])
+    text = ', '.join(store[id])
     print("All text:", text)
 
     # Limit history size to last 4 messages
-    if len(store[id]) > 4:
+    if len(store[id]) > 8:
         store[id].pop(0)
 
     # Transform input text for model prediction
@@ -88,4 +97,4 @@ def handle_predict_event(data):
     emit('prediction', {"fraud_probability": 100 - score})
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, allow_unsafe_werkzeug=True)

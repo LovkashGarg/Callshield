@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useSpeechRecognition } from 'react-speech-kit';
-import axios from 'axios';
 import classNames from 'classnames';
+import { io } from 'socket.io-client';
+
+// const API_URL = process.env.BACKEND_API_URL || "https://callshield-backend.onrender.com" || "http://localhost:5000";
+const API_URL =  "https://callshield-backend.onrender.com" ;
+const socket = io(API_URL); // Initialize socket connection
 
 const AudioRecorderWithSpeechRecognition = () => {
   const [value, setValue] = useState('');
@@ -37,7 +41,6 @@ const AudioRecorderWithSpeechRecognition = () => {
 
         recorder.onstop = () => {
           const blob = new Blob(audioChunks, { type: 'audio/wav' });
-          // setAudioUrl(URL.createObjectURL(blob));
           setAudioChunks([]); // Clear audio chunks after stopping
         };
 
@@ -50,29 +53,27 @@ const AudioRecorderWithSpeechRecognition = () => {
     }
   }, [isListening]);
 
-  async function predictTheScore(){
-    try {
-      let sendToServer = await axios.post(API_URL+'/predict', {
-        text: value,
-        id: roomID
-      });
-      const fraudProbability = sendToServer.data.fraud_probability;
-      setScore(fraudProbability); // Set the fraud probability score
-    } catch (axiosError) {
-      console.error("Error posting to server:", axiosError.message);
-      if (axiosError.code === 'ERR_NETWORK') {
-        console.log("Network error: Could not reach the server. Please check if the backend is running.");
-      } else {
-        console.log(`An error occurred: ${axiosError.message}`);
-      }
-    }
-  }
-
   useEffect(() => {
     if (value) {
-      predictTheScore();
+      socket.emit('predict', {
+        text: value,
+        id: roomID,
+      });
     }
   }, [value]);
+
+  // Handle incoming predictions from the server
+  useEffect(() => {
+    socket.on('prediction', (data) => {
+      const fraudProbability = data.fraud_probability;
+      setScore(fraudProbability);
+    });
+
+    // Clean up the socket connection on unmount
+    return () => {
+      socket.off('prediction');
+    };
+  }, []);
 
   const toggleListening = () => {
     if (isListening) {
