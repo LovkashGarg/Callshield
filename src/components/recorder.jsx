@@ -37,7 +37,7 @@ const AudioRecorderWithSpeechRecognition = () => {
 
         recorder.onstop = () => {
           const blob = new Blob(audioChunks, { type: 'audio/wav' });
-          setAudioUrl(URL.createObjectURL(blob));
+          // setAudioUrl(URL.createObjectURL(blob));
           setAudioChunks([]); // Clear audio chunks after stopping
         };
 
@@ -93,6 +93,7 @@ const AudioRecorderWithSpeechRecognition = () => {
         style={{ height: "calc(100vh - 300px)" }}
         className="w-full h-32 mt-8 mb-4 p-3 resize-none rounded-md shadow-lg bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 transition-colors"
       />
+<<<<<<< HEAD
       <div className="fixed bottom-0 p-3">
         <div 
           className={classNames(
@@ -106,6 +107,17 @@ const AudioRecorderWithSpeechRecognition = () => {
           style={{ fontSize: '1.2em' }}
         >
           Fraud Probability: {score}%
+=======
+      <div className='w-[300px]  h-[40px] bg-red-500 text-white'>{score}</div>
+      <textarea className='w-[400px] h-[200px]' value={translatedtext.join(', ')} readOnly placeholder='Translated text will appear here '/>
+      <button onClick={toggleListening}>
+        {isListening ? 'Stop Listening' : 'Start Listening'}
+      </button>
+      {audioUrl && (
+        <div>
+          <h3>Recorded Audio:</h3>
+          <audio src={audioUrl} controls />
+>>>>>>> ce27bd2901af382ad42c2b1c334278003e15b63d
         </div>
         <div className="flex items-center justify-between w-full">
           <button
