@@ -38,7 +38,7 @@ const AudioRecorderWithSpeechRecognition = () => {
 
         recorder.onstop = () => {
           const blob = new Blob(audioChunks, { type: 'audio/wav' });
-          setAudioUrl(URL.createObjectURL(blob));
+          // setAudioUrl(URL.createObjectURL(blob));
           setAudioChunks([]); // Clear audio chunks after stopping
         };
 
@@ -132,7 +132,7 @@ const AudioRecorderWithSpeechRecognition = () => {
         placeholder="Start speaking..."
         className="w-full h-40 mb-4 mx-[50px]"
       />
-      <div className='w-[300px] h-[40px] bg-red-500 text-white'>{score}</div>
+      <div className='w-[300px]  h-[40px] bg-red-500 text-white'>{score}</div>
       <textarea className='w-[400px] h-[200px]' value={translatedtext.join(', ')} readOnly placeholder='Translated text will appear here '/>
       <button onClick={toggleListening}>
         {isListening ? 'Stop Listening' : 'Start Listening'}
