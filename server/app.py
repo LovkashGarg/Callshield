@@ -1,19 +1,15 @@
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit
+from flask_cors import CORS
 import joblib
 import os
 
 app = Flask(__name__)
-<<<<<<< HEAD
 socketio = SocketIO(app)
-
-# Define paths to the model and vectorizer files
-=======
 
 CORS(app)
 
 
->>>>>>> ce27bd2901af382ad42c2b1c334278003e15b63d
 base_dir = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(base_dir, 'model', 'model.pkl')
 vectorizer_path = os.path.join(base_dir, 'model', 'vectorizer.pkl')
